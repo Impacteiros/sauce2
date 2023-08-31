@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="stylesheet" href="{{url_for('static', filename="css/style.css")}}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sauce Burguer</title>
+    <link rel="icon" type="image/x-icon" href="{{url_for('static', filename="images/favicon.ico")}}">
+
+    <script>
+        function fecharDiv() {
+            var overlay = document.querySelector('.overlayAviso');
+            overlay.style.display = 'none';
+        }
+    </script>
+
+</head>
+
+<body>
+    {% with adicionado = get_flashed_messages() %}
+    {% if adicionado %}
+    <link rel="stylesheet" href="{{url_for('static', filename="css/style_selecao.css")}}"> {%endif%}
+    {%endwith%}
+    {% include 'header.html' %}
+    {% with adicionado = get_flashed_messages() %}
+    {% if adicionado %}
+    <div class="overlayAviso">
+        <div class="content">
+            <!-- Botão de fechar -->
+            <span class="close-button" onclick="fecharDiv()">&times;</span>
+
+            <!-- Seu conteúdo aqui -->
+            <h1>Atenção</h1>
+            <p>{{adicionado[0]}}</p>
+        </div>
+    </div>
+    {% endif %}
+    {% endwith %}
+    <div class="container">
+        <div class="topo">
+            {%if cliente%}Você está atendendo: {{cliente.nome}}{%endif%}
+            <h3>Você está atendendo a mesa: {{mesa}}</h3>
+            <p class="mesa_sair"><a href="/selecao">Mudar a mesa</a></p>
+            <h1>🍔 Hamburgueres 🍔</h1>
+        </div>
+        {% for lanche in lanches %}
+
+        <div class="infos">
+            <div id="menu-{{ lanche.id }}" class="modal">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h3>Selecione os Adicionais para {{ lanche.nome }}</h3>
+                    <form method="POST" action="/carrinho/adicionar/{{lanche.id}}">
+                    <ul>
+                        {% for adicional in adicionais %}
+                        <li><input type="number" name="{{adicional.nome}}" value="0"> {{ adicional.nome }} </li>
+                        {% endfor %}
+                    </ul>
+                    <button type="submit">Enviar ao carrinho</button>
+                    </form>
+                </div>
+            </div>
+            <div class="texto">
+                <ul>
+                    <li class="nome_lanche">{{lanche.nome}}</li>
+                    <li class="descricao">{{lanche.descricao[:110]}}</li>
+                    <li class="preco">R$ {{ "%.2f" % lanche.preco }}</li>
+                </ul><br>
+                {% if lanche.disponivel == True %}<p class="links"><button class="openButton" data-menu="menu-{{ lanche.id }}"><i class="fas fa-star"></i> Selecionar Adicionais</button><br><a href="/carrinho/adicionar/{{lanche.id}}"><i
+                            class="fas fa-shopping-cart"></i><i class="fas fa-plus"></i> Adicionar ao carrinho</a></p>
+                {% else %} Produto indisponível {% endif %}
+            </div>
+            <div class="imagem">
+                <img src="{{lanche.url_imagem}}" />
+            </div>
+        </div>
+        {% endfor %}
+        <h1 style="width: 100%;">🥤 Bebidas 🥤</h1>
+        {% for bebida in bebidas %}
+        <div class="infos">
+            <div class="texto">
+                <ul>
+                    <li class="nome_lanche">{{bebida.nome}}</li>
+                    <li class="descricao">{{bebida.descricao[:110]}}</li>
+                    <li class="preco">R$ {{ "%.2f" % bebida.preco }}</li>
+                </ul>
+                <p class="links"><a href="/carrinho/adicionar/{{bebida.id}}"><i class="fas fa-shopping-cart"></i><i
+                            class="fas fa-plus"></i> Adicionar ao carrinho</a></p>
+            </div>
+            <div class="imagem">
+                <img src="{{bebida.url_imagem}}" />
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+<script>
+    // Obtém todos os botões de abertura
+    var openButtons = document.getElementsByClassName("openButton");
+
+    // Atribui os event listeners a cada botão
+    for (var i = 0; i < openButtons.length; i++) {
+        openButtons[i].addEventListener("click", function () {
+            var menuId = this.getAttribute("data-menu");
+            var menu = document.getElementById(menuId);
+            menu.style.display = "flex";
+        });
+    }
+
+    // Obtém todos os botões de fechamento
+    var closeButtons = document.getElementsByClassName("close");
+
+    // Atribui os event listeners a cada botão de fechamento
+    for (var j = 0; j < closeButtons.length; j++) {
+        closeButtons[j].addEventListener("click", function () {
+            var menu = this.parentNode.parentNode;
+            menu.style.display = "none";
+        });
+    }
+
+    // Fecha o menu quando o usuário clica fora dele
+    window.addEventListener("click", function (event) {
+        var menus = document.getElementsByClassName("modal");
+        for (var k = 0; k < menus.length; k++) {
+            if (event.target == menus[k]) {
+                menus[k].style.display = "none";
+            }
+        }
+    });
+
+</script>
+
+</html>

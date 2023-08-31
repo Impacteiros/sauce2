@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="{{url_for('static', filename="css/style.css")}}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar</title>
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <header><h1>PAINEL DE ADMINISTRAÇÃO</h1></header>
+    <div class="container">
+    {% for lanche in lanches %}
+    <div class="infos">
+        <div class="texto">
+        <ul id="lista">
+    <li class="nome_lanche">{{ lanche.nome }}</li>
+    <li class="descricao">{{ lanche.descricao[:110] }}</li>
+    <li class="preco">R$ {{" %.2f" % lanche.preco }}</li>
+    <li class="remover"><a href="/remover/{{lanche.id}}" onclick="return confirm('Você tem certeza que deseja apagar esse produto?')">REMOVER</a></li>
+    <li class="editar"><a href="/editar/{{lanche.id}}">EDITAR</a></li>
+        </ul>
+        </div>
+        <div class="imagem">
+    <img src="{{lanche.url_imagem}}" />
+        </div>
+    </div>
+    {% endfor %}
+    <h1 style="width: 100%;">🥤 Bebidas 🥤</h1>
+    {% for bebida in bebidas %}
+    <div class="infos">
+        <div class="texto">
+        <ul>
+    <li class="nome_lanche">{{bebida.nome}}</li>
+    <li class="descricao">{{bebida.descricao[:110]}}</li>
+    <li class="preco">R$ {{ "%.2f" % bebida.preco }}</li>
+    <li class="remover"><a href="/remover/{{bebida.id}}" onclick="return confirm('Você tem certeza que deseja apagar esse produto?')">REMOVER</a></li>
+    <li class="editar"><a href="/editar/{{bebida.id}}">EDITAR</a></li>
+        </ul>
+        </div>
+        <div class="imagem">
+    <img src="{{bebida.url_imagem}}" />
+        </div>
+    </div>
+    {% endfor %}
+    <h1 style="width: 100%">Cupons</h1>
+    <div class="cupons">
+        <ul>
+        {% for cupom in cupons %}
+
+        <li>{{ cupom.cupom }}: {{cupom.valor}} <a href="/gerenciar/cupom/remover/{{cupom.id}}">X</a></li>
+
+        {% endfor %}
+        </ul>
+    <h3><a href="/cadastro/cupom">Cadastrar CUPOM</a></h3>
+    </div>
+
+</div>
+
+</body>
+</html>

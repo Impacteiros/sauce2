@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="{{url_for('static', filename="css/style.css")}}">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sauce Burguer</title>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/3.1.0/socket.io.js"></script>
+    <script type="text/javascript" charset="utf-8">
+      var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+      socket.on('connect', function() {
+        socket.emit('my_event', {data: 'Conectado'});
+      });
+
+      socket.on('atualizacao', function(data) {
+        console.log(data);
+        location.reload(true);
+      });
+    </script>
+</head>
+
+    <center><h1>Cozinha</h1></center>
+    <div class="container">
+      <h1 style="width: 100%;">Pedidos ativos</h1>
+        <div class="ativos">
+        {% for mesa in pedidos %}
+        <div class="infos">
+            <div class="texto">
+        <h3>Mesa: {{mesa}}</h3><br>
+        <ul>
+                {%for produto in pedidos[mesa]%}
+
+                <li style="font-weight: bold; font-size: 1.2em;">{{ produto.nome }}</li>
+                {%for adicional, quantidade in produto.adicionais.items()%}{% if quantidade > 0%}<li>{{adicional}}: {{quantidade}} {%endif%}{% endfor %}</li>
+
+                {%endfor%}
+        </ul>
+        </div>
+        <div class="atendente">
+          <form method="post" action="/cozinha/finalizar/{{mesa}}">
+            <button>Finalizar pedido</button>
+            </form><br />
+          <b>Atendente:</b><br>
+          {{atendente}}
+        </div>
+        </div>
+        <br />
+        {% endfor %}
+    </div>
+    <h1>Pedidos finalizados</h1>
+    <div class="finalizados">
+        {% for pedido in finalizados %}
+        <div class="infos">
+            <div class="texto">
+        <h3 class="infos_head">Mesa: {{pedido.mesa}}</h3><br>
+                {%for produto in pedido["lanches"]%}
+
+                {{ produto }} <br>
+
+                {%endfor%}
+              
+        </div>
+        <div class="atendente">
+          <b>Atendente:</b><br />
+          {{pedido.atendente}}
+        </div>
+        </div>
+        <br />
+        {% endfor %}
+    </div>
+    </div>
+</body>
+</html>

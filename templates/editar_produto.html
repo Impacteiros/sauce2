@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Editar produto</title>
+    <link rel="stylesheet" href="{{url_for('static', filename="css/style_adicionar.css")}}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="content">
+            <div id="form">
+                <h1><a href="/gerenciar"><i class="fas fa-arrow-left" style="color: rgb(0, 0, 0);"></i></a>Editar produto</h1>
+                <form method="post">
+                    <label for="nome">Nome:</label>
+                    <input type="text" id="nome" name="nome" value="{{produto.nome}}">
+
+                    <label for="descricao">Descrição:</label>
+                    <textarea id="descricao" name="descricao"></textarea>
+
+                    <label for="preco">Preço:</label>
+                    <input type="number" id="preco" name="preco" step="any" placeholder="00,00" value="{{produto.preco}}">
+                    <label for="categoria">Categoria:</label>
+                    <select id="categoria" name="categoria">
+                      <option value="hamburguer" {% if produto.categoria == "hamburguer" %}selected{%endif%}>Hamburguer</option>
+                      <option value="bebida" {% if produto.categoria == "bebida" %}selected{%endif%}>Bebida</option>
+                      <option value="outros" {% if produto.categoria == "outros" %}selected{%endif%}>Outros</option>
+                    </select>
+                    <label for="disponivel">Disponível:</label>
+                    <select id="disponivel" name="disponivel">
+                        <option value="True" {% if produto.disponivel == True%}selected{%endif%}>Sim</option>
+                        <option value="False" {% if produto.disponivel == False%}selected{%endif%}>Não</option>
+                    </select>
+                    <label for="url_imagem">URL da Imagem:</label>
+                    <input type="text" id="url_imagem" name="url" value="{{produto.url_imagem}}">
+
+                    <input type="submit" value="Editar">
+                </form>
+            </div>
+        </div>
+        
+        <script>
+            const textarea = document.getElementById("descricao");
+            textarea.value = "{{produto.descricao}}";
+        </script>
+</body>
+
+</html>

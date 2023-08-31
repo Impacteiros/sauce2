@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="{{url_for('static', filename="css/style.css")}}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Funcionários</title>
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <header><h1>PAINEL DE ADMINISTRAÇÃO</h1></header>
+    <div class="container">
+    {% for funcionario in funcionarios %}
+    <div class="infos">
+        <div class="texto">
+        <ul id="lista">
+    <li class="nome_lanche">{{ funcionario.nome }} - {{ funcionario.cargo[:3] }}</li>
+    <li class="remover"><a href="/funcionario/remover/{{funcionario.id}}" onclick="return confirm('Você tem certeza que deseja apagar esse funcionario?')">REMOVER</a></li>
+        </ul>
+        </div>
+    </div>
+    {% endfor %}
+    <h2 style="width: 100%; text-align: center;"><a href="/cadastro/funcionario">Adicionar novo funcionário</a></h2>
+
+</div>
+
+</body>
+</html>

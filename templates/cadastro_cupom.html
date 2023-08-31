@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Cadastro de Cupom</title>
+    <link rel="stylesheet" href="{{url_for('static', filename="css/style_adicionar.css")}}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="content">
+            <div id="form">
+                <h1><a href="/gerenciar"><i class="fas fa-arrow-left" style="color: rgb(0, 0, 0);"></i></a>  Cadastro de cupom</h1>
+                {{ cargo }}
+                <form method="post">
+                    <label for="cupom">Cupom:</label>
+                    <input type="text" id="cupom" name="cupom">
+
+                    <label for="valor">Valor:</label>
+                    <input type="number" id="valor" name="valor" step="any"></input>
+
+                    <input type="submit" value="Cadastrar">
+                </form>
+            </div>
+        </div>
+</body>
+
+</html>

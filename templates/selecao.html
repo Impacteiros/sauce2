@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="stylesheet" href="{{url_for('static', filename="css/style.css")}}">
+    {% with sucesso = get_flashed_messages() %}
+    {% if sucesso %} <link rel="stylesheet" href="{{url_for('static', filename="css/style_selecao.css")}}"> {%endif%}
+    {%endwith%}
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sauce Burguer</title>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/3.1.0/socket.io.js"></script>
+    <script type="text/javascript" charset="utf-8">
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+    
+        socket.on('connect', function() {
+          socket.emit('my_event', {data: 'Conectado'});
+        });
+    
+        socket.on('pedido', function(data) {
+          console.log("NOVO PEDIDO");
+          alert(`PEDIDO PRONTO, MESA: ${data}`)
+        });
+      </script>
+
+
+    <script>
+        function mostrarElemento(selectElement) {
+            var selectedValue = selectElement.value;
+            var semCadastro = document.getElementById("semcadastro");
+            var cadastrado = document.getElementById("cadastrado");
+            var cadastro = document.getElementById("cadastro");
+            var resultado = document.getElementById('resultados')
+
+            console.log(resultado)
+
+            if (selectedValue === "semcadastro") {
+                semCadastro.style.display = "flex";
+                cadastro.style.display = "none";
+                cadastrado.style.display = "none"
+                resultado.style.display = "none"
+
+            } else if (selectedValue === "cadastrar") {
+                cadastro.style.display = "block";
+                semCadastro.style.display = "none";
+                cadastrado.style.display = "none"
+                resultado.style.display = "none"
+
+            } else if (selectedValue === "cadastrado") {
+                cadastrado.style.display = "flex";
+                semCadastro.style.display = "none";
+                cadastro.style.display = "none"
+                resultado.style.display = "none"
+
+            }
+        }
+
+        function fecharDiv() {
+            var overlay = document.querySelector('.overlayAviso');
+            overlay.style.display = 'none';
+        }
+    
+    </script>
+
+</head>
+
+<body>
+    {% with sucesso = get_flashed_messages() %}
+    {% if sucesso %} 
+    <div class="overlayAviso">
+        <div class="content">
+            <!-- Botão de fechar -->
+            <span class="close-button" onclick="fecharDiv()">&times;</span>
+            
+            <!-- Seu conteúdo aqui -->
+            <h1>Atenção</h1>
+            <p>{{sucesso[0]}}</p>
+        </div>
+    </div>
+    {% endif %}
+    {% endwith %}
+    <div class="container">
+        <img src="{{url_for('static', filename="images/logo_topo.png")}}" width="200" height="100"/> 
+        <div class="cliente">
+            <h1>Cadastro:</h1>
+            <ul>
+                <select name="cadastro" onchange="mostrarElemento(this)">
+                    <option value=""></option>
+                    <li>
+                        <option value="semcadastro">Sem cadastro</option>
+                    </li>
+                    <li>
+                        <option value="cadastrado">Já cadastrado</option>
+                    </li>
+                    <li>
+                        <option value="cadastrar">Criar cadastro</option>
+                    </li>
+                </select>
+            </ul>
+            
+        </div>
+
+        <div id="semcadastro">
+            <form method="POST">
+            <input type="number" placeholder="MESA" id="mesa" name="mesa" required />
+            <input type="submit" name="sem_cadastro" value="Enviar">
+            </form>
+        </div>
+
+        <div id="cadastro">
+            <form action="/cadastro/cliente" method="POST">
+                <label for="nome">Nome:</label>
+                <input type="text" id="nome" name="nome" required>
+
+                <label for="endereco">Endereço:</label>
+                <input type="text" id="endereco" name="endereco" required>
+
+                <label for="celular">Celular:</label>
+                <input type="tel" id="celular" name="celular" required>
+
+                <label for="email">E-mail:</label>
+                <input type="email" id="email" name="email" required>
+
+                <input type="submit" value="Enviar">
+            </form>
+        </div>
+
+        <div id="cadastrado">
+            <label for="nome">Digite o nome do cliente:</label>
+            <form method="POST" action="/selecao/">
+                <input type="text" name="pesquisa" required>
+                <input type="submit" value="Enviar">
+            </form>
+        </div>
+
+    </div>
+    {% if clientes %}
+    <h3>Selecione o cliente:</h3><br>
+    <div class="resultados" id="resultados">
+        <ul>
+                <form method="POST">
+                
+                    {% for x in clientes %}
+                <li class="nomes"><input type="radio" name="id_cliente" value="{{x.id}}"> {{x.nome}}</li><br>
+                    {% endfor %}
+                    <input type="number" placeholder="MESA" id="mesa" name="mesa" required />
+                    <input type="submit">
+            </ul>
+        </form>
+        {% elif clientes == False %}
+        <div><h1>Não encontrado</h1></div>
+    </div>
+    {%endif%}
+</body>
+
+</html>

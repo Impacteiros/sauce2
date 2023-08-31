@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="{{url_for('static', filename="css/style.css")}}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carrinho</title>
+
+</head>
+<body>
+    {% include 'header.html' %}    
+    <center><h1>Carrinho</h1></center>
+    <div class="container">
+    {% for produto in carrinho %}
+    <div class="infos">
+        <div class="texto">
+        <ul>
+    <li class="nome_lanche">{{produto.nome}}</li>
+    <li class="descricao">{{produto.descricao[:110]}}</li>
+    <li class="preco">R$ {{ "%.2f" % produto.preco }}</li>
+        </ul>
+        <p class="links"><a href="/carrinho/remover/{{produto.id}}" style="color: #FF0000;"><i class="fas fa-shopping-cart"></i><i class="fas fa-minus"></i>Remover do carrinho</a></p>
+        </div>
+        <div class="imagem">
+    <img src="{{produto.url_imagem}}" />
+        </div>
+    </div>
+    {% endfor %}
+    {% if carrinho %}
+    <form method="post" style="width: 100%; text-align: center;">
+        Cupom: <input type="text" name="cupom"><input type="submit">
+    </form>
+    <div class="mesa">
+        <center><h1>SUB-TOTAL: R$ {{"%.2f" % preco_total }}</h1></center>
+        <h3 style="margin-bottom: 0;">Desconto CUPOM: R$ {{"%.2f" % cupom }}</h3>
+        <center><h1 style="margin-top: 0;">TOTAL: R$ {{"%.2f" % (preco_total - cupom) }}</h1></center>
+        <form method="post" action="/carrinho/enviar">
+            <input type="submit" style="font-size: 2.5rem;">
+        </form>
+    </div>
+    {% endif %}
+</div>
+</body>
+</html>
