@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Cadastro de Produto</title>
+    <link rel="stylesheet" href="{{url_for('static', filename="css/style_adicionar.css")}}">
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="content">
+            <div id="form">
+                <h1>Cadastro de Funcionário</h1>
+                {{ cargo }}
+                <form method="post">
+                    <label for="nome">Nome:</label>
+                    <input type="text" id="nome" name="nome">
+
+                    <label for="preco">Senha:</label>
+                    <input type="password" id="senha" name="senha">
+
+                    <label for="nome">Celular:</label>
+                    <input type="text" id="celular" name="celular">
+
+                    <input type="submit" value="Cadastrar">
+                </form>
+            </div>
+        </div>
+</body>
+
+</html>

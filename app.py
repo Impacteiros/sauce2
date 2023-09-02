@@ -77,23 +77,12 @@ def cadastro_cliente():
 
 @app.route("/")
 def home():
-    try:
-        session['usuario']
-        nome = session['usuario'][0]
-        cargo = session['usuario'][1]
-    except KeyError:
-        return redirect("/login/")
-    print(session)
-    if 'mesa' not in session or session['mesa'] == None:
-        return redirect(url_for('selecao'))
-    mesa = session['mesa']
-    if 'id_cliente' in session:
-        cliente = database.get_cliente(session['id_cliente'])
-        print(cliente)
-        return render_template("index.html", lanches=lanches, bebidas=bebidas,
-                          nome=nome, cargo=cargo, cliente=cliente, mesa=mesa, adicionais=adicionais)
+    lanches = database.Produto.get_lanches()
+    bebidas = database.Produto.get_bebidas()
+    adicionais = database.lista_adicionais
+
     return render_template("index.html", lanches=lanches, bebidas=bebidas,
-                           nome=nome, cargo=cargo, mesa=mesa, adicionais=adicionais)
+                           adicionais=adicionais)
 
 @app.route("/login/", methods=["POST", "GET"])
 def login():
@@ -102,12 +91,29 @@ def login():
     usuario = request.form.get("usuario")
     senha = request.form.get("senha")
     if usuario and senha:
-        validacao = database.validar_login(usuario, senha)
-        if validacao[0]:
+        validacao = database.Cliente.validar_login(usuario, senha)
+        if validacao:
             session['usuario'] = [validacao[1], validacao[2]]
             return redirect(url_for("home"))
         return render_template("login.html", erro=validacao[1])
     return render_template("login.html")
+
+
+@app.route("/cadastro/usuario", methods=["POST", "GET"])
+def cadastro_usuario():
+    nome = request.form.get("nome")
+    celular = request.form.get("celular")
+    senha = request.form.get("senha")
+    if nome and senha and celular:
+        cadastrado = database.validar_cadastro(celular)
+        if cadastrado:
+            return "Usuário em uso"
+        database.cadastrar_cliente(nome, celular, senha)
+        return "Cadastrado com sucesso"
+    else:
+        return render_template("cadastro_usuario.html")
+
+
 
 @app.route("/cadastro/funcionario/", methods=["POST", "GET"])
 def cadastro():
@@ -255,9 +261,7 @@ def adicionar():
         database.adicionar_adicional(nome, preco, url_imagem)
         return redirect("/")
 
-    if validar_perm():
-            return render_template("adicionar.html", lanches=lanches, bebidas=bebidas)
-    return "Você não tem permissão.", 403
+    return render_template("adicionar.html", lanches=lanches, bebidas=bebidas)
 
 @app.route("/editar/<id>", methods=["GET", "POST"])
 def editar(id):

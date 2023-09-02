@@ -41,11 +41,9 @@
     {% endwith %}
     <div class="container">
         <div class="topo">
-            {%if cliente%}Você está atendendo: {{cliente.nome}}{%endif%}
-            <h3>Você está atendendo a mesa: {{mesa}}</h3>
-            <p class="mesa_sair"><a href="/selecao">Mudar a mesa</a></p>
             <h1>🍔 Hamburgueres 🍔</h1>
         </div>
+        {% if lanches %}
         {% for lanche in lanches %}
 
         <div class="infos">
@@ -66,18 +64,21 @@
             <div class="texto">
                 <ul>
                     <li class="nome_lanche">{{lanche.nome}}</li>
-                    <li class="descricao">{{lanche.descricao[:110]}}</li>
-                    <li class="preco">R$ {{ "%.2f" % lanche.preco }}</li>
+                    <li class="descricao">{{lanche.descricao}}</li>
+                    <li class="preco">R$ {{lanche.preco}}</li>
                 </ul><br>
                 {% if lanche.disponivel == True %}<p class="links"><button class="openButton" data-menu="menu-{{ lanche.id }}"><i class="fas fa-star"></i> Selecionar Adicionais</button><br><a href="/carrinho/adicionar/{{lanche.id}}"><i
                             class="fas fa-shopping-cart"></i><i class="fas fa-plus"></i> Adicionar ao carrinho</a></p>
-                {% else %} Produto indisponível {% endif %}
+                {% else %} <p>Produto indisponível</p>
+                {% endif %}
+                
             </div>
             <div class="imagem">
                 <img src="{{lanche.url_imagem}}" />
             </div>
         </div>
         {% endfor %}
+        {% endif %}
         <h1 style="width: 100%;">🥤 Bebidas 🥤</h1>
         {% for bebida in bebidas %}
         <div class="infos">
