@@ -10,13 +10,6 @@ app.config['SECRET_KEY'] = "!yw2gC8!BeM3"
 
 socketio = SocketIO(app)
 
-lanches = database.lista_lanches
-bebidas = database.lista_bebidas
-adicionais = database.lista_adicionais
-cupons = database.lista_cupom
-cupom_nome = None
-pedidos = database.lista_pedidos
-
 lista_carrinho = {}
 pedidos_cozinha = {}
 
@@ -79,7 +72,7 @@ def cadastro_cliente():
 def home():
     lanches = database.Produto.get_lanches()
     bebidas = database.Produto.get_bebidas()
-    adicionais = database.lista_adicionais
+    adicionais = database.Adicional.get_adicionais()
 
     return render_template("index.html", lanches=lanches, bebidas=bebidas,
                            adicionais=adicionais)
@@ -105,10 +98,10 @@ def cadastro_usuario():
     celular = request.form.get("celular")
     senha = request.form.get("senha")
     if nome and senha and celular:
-        cadastrado = database.validar_cadastro(celular)
+        cadastrado = database.Cliente.get_cliente(celular)
         if cadastrado:
             return "Usuário em uso"
-        database.cadastrar_cliente(nome, celular, senha)
+        database.Cliente.cadastrar_cliente(nome, celular, senha)
         return "Cadastrado com sucesso"
     else:
         return render_template("cadastro_usuario.html")
@@ -222,11 +215,9 @@ def debug():
 
 @app.route("/gerenciar/")
 def gerenciar():
-    cupons = database.lista_cupom
-    cargo = session['usuario'][1]
-    if validar_perm():
-            return render_template("gerenciar.html", cargo=cargo, lanches=lanches, bebidas=bebidas, cupons=cupons)
-    return "Acesso negado", 403
+    lanches = database.Produto.get_lanches()
+    bebidas = database.Produto.get_bebidas()
+    return render_template("gerenciar.html", lanches=lanches, bebidas=bebidas)
 
 @app.route("/gerenciar/cupom/remover/<id>")
 def remover_cupom(id):
@@ -242,8 +233,10 @@ def gerenciar_funcionarios():
             return render_template("gerenciar_funcionarios.html", cargo=cargo, funcionarios=funcionarios)
     return "Acesso negado", 403
 
-@app.route("/adicionar/", methods=["POST", "GET"])
+@app.route("/cadastro/produto/", methods=["POST", "GET"])
 def adicionar():
+    lanches = database.Produto.get_lanches()
+    bebidas = database.Produto.get_bebidas()
     tipo = request.form.get("tipo")
     if tipo == "produto":
         nome = request.form.get("nome")
@@ -252,7 +245,7 @@ def adicionar():
         categoria = request.form.get("categoria")
         url = request.form.get("url")
         if nome and preco and url:
-            database.adicionar_produto(nome, descricao, preco, categoria, url)
+            database.Produto.adicionar_produto(nome, descricao, preco, categoria, url)
             return redirect("/")
     if tipo == "adicional":
         nome = request.form.get("nome")
@@ -291,10 +284,10 @@ def consulta(id):
 
 @app.route("/remover/<id>")
 def remover(id):
-    if validar_perm():
-        database.remover_produto(id)
-        return redirect(request.referrer)
-    return "Acesso negado", 403
+    # if validar_perm():
+    database.Produto.remover_produto(id)
+    return redirect(request.referrer)
+    # return "Acesso negado", 403
 
 @app.route("/funcionario/remover/<id>")
 def remover_funcionario(id):

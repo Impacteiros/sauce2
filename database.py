@@ -64,15 +64,13 @@ class Cliente:
         self.celular = celular
         self.__senha = senha
 
-    def limpar_db():
-        cur.execute("DELETE FROM usuario;")
-
     def get_cliente(celular):
         cur.execute('SELECT * FROM usuario WHERE usuario.celular = %s', (celular,))
         result = cur.fetchone()
         if result == None:
             return None
-        return Cliente(result[0], result[1], result[2])
+        res = {"nome": result[1], "celular": result[2]}
+        return res
     
     def cadastrar_cliente(nome, celular, senha):
         cliente_cadastrado = Cliente.get_cliente(celular)
@@ -92,7 +90,8 @@ class Cliente:
 
         if validation == None:
             return False
-        return Cliente(validation[0], validation[1], validation[2])
+        res = {"nome": validation[1], "celular": validation[2]}
+        return res
 
 class Funcionario:
     def __init__(self, id, nome, usuario, senha, cargo):
@@ -162,7 +161,8 @@ class Produto:
         cur.execute("SELECT * FROM produto WHERE produto.categoria = 'hamburguer' AND produto.ativo = True")
         dados = cur.fetchall()
         for produto in dados:
-            lanches.append(Produto(produto[0], produto[1], produto[2], produto[3], produto[4], produto[5], produto[6], produto[7]))
+            lanche = {"id": produto[0], "nome": produto[1], "preco": produto[2], "descricao": produto[3], "url_imagem": produto[4], "categoria": produto[5], "ativo": produto[6], "disponivel": produto[7]}
+            lanches.append(lanche)
         return lanches
         
     def get_lanche(id):
@@ -170,14 +170,16 @@ class Produto:
         result = cur.fetchone()
         if result == None:
             return None
-        return Produto(result[0], result[1], result[2], result[3], result[4], result[5], result[6], result[7])
+        res = {"nome": result[1], "preco": result[2], "descricao": result[3], "url_imagem": result[4], "categoria": result[5], "ativo": result[6], "disponivel": result[7]}
+        return res
 
     def get_bebidas():
         bebidas = []
         cur.execute("SELECT * FROM produto WHERE produto.categoria = 'bebida' AND produto.ativo = True")
         dados = cur.fetchall()
         for produto in dados:
-            bebidas.append(Produto(produto[0], produto[1], produto[2], produto[3], produto[4], produto[5], produto[6], produto[7]))
+            bebida = {"id": produto[0], "nome": produto[1], "preco": produto[2], "descricao": produto[3], "url_imagem": produto[4], "categoria": produto[5], "ativo": produto[6], "disponivel": produto[7]}
+            bebidas.append(bebida)
         return bebidas
 
     def editar_produto(id, nome, preco, descricao, url_imagem):
