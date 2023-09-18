@@ -25,7 +25,7 @@
         </ul>
         </div>
         <div class="imagem">
-    <img src="{{lanche.url_imagem}}" />
+    <img src="{{url_for('static', filename="produtos/")}}{{lanche.url_imagem}}" />
         </div>
     </div>
     {% endfor %}
@@ -42,7 +42,7 @@
         </ul>
         </div>
         <div class="imagem">
-    <img src="{{bebida.url_imagem}}" />
+    <img src="{{url_for('static', filename="produtos/")}}{{bebida.url_imagem}}" />
         </div>
     </div>
     {% endfor %}

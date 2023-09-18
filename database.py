@@ -201,8 +201,13 @@ class Adicional:
         self.disponivel = disponivel
 
     def get_adicionais():
+        adicionais = []
         cur.execute("SELECT * FROM adicional WHERE adicional.ativo = True")
-        return cur.fetchall()
+        dados = cur.fetchall()
+        for adicional in dados:
+            res = {"id": adicional[0], "nome": adicional[1], "preco": adicional[2], "url_imagem": adicional[3], "ativo": adicional[4], "disponivel": adicional[5]}
+            adicionais.append(res)
+        return adicionais
 
     def adicionar_adicional(nome, preco, url_imagem):
         try:

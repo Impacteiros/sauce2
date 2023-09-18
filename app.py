@@ -211,7 +211,7 @@ def deslogar():
 
 @app.route("/debug/")
 def debug():
-    return pedidos_cozinha
+    return database.Produto.get_lanches()
 
 @app.route("/gerenciar/")
 def gerenciar():
@@ -251,7 +251,7 @@ def adicionar():
         nome = request.form.get("nome")
         preco = request.form.get("preco")
         url_imagem = request.form.get("url_imagem") 
-        database.adicionar_adicional(nome, preco, url_imagem)
+        database.Adicional.adicionar_adicional(nome, preco, url_imagem)
         return redirect("/")
 
     return render_template("adicionar.html", lanches=lanches, bebidas=bebidas)
