@@ -165,12 +165,12 @@ class Produto:
             lanches.append(lanche)
         return lanches
         
-    def get_lanche(id):
-        cur.execute(f"SELECT * FROM produto WHERE produto.categoria = 'hamburguer' AND produto.ativo = True AND produto.id = {id}")
+    def get_produto(id):
+        cur.execute(f"SELECT * FROM produto WHERE produto.ativo = True AND produto.id = {id}")
         result = cur.fetchone()
         if result == None:
             return None
-        res = {"nome": result[1], "preco": result[2], "descricao": result[3], "url_imagem": result[4], "categoria": result[5], "ativo": result[6], "disponivel": result[7]}
+        res = {"id": result[0], "nome": result[1], "preco": result[2], "descricao": result[3], "url_imagem": result[4], "categoria": result[5], "ativo": result[6], "disponivel": result[7]}
         return res
 
     def get_bebidas():
@@ -182,9 +182,9 @@ class Produto:
             bebidas.append(bebida)
         return bebidas
 
-    def editar_produto(id, nome, preco, descricao, url_imagem):
+    def editar_produto(id, nome, descricao, preco, categoria, url_imagem, disponivel):
         try:
-            cur.execute(f"UPDATE produto SET nome = '{nome}', preco = {preco}, descricao = '{descricao}', url_imagem = '{url_imagem}' WHERE id = {id};")
+            cur.execute(f"UPDATE produto SET nome = '{nome}', preco = {preco}, descricao = '{descricao}', url_imagem = '{url_imagem}', categoria = '{categoria}', disponivel = '{disponivel}' WHERE id = {id};")
             conn.commit()
             return True
         except Exception as e:
@@ -226,3 +226,43 @@ class Adicional:
         if result == None:
             return None
         return Adicional(result[0], result[1], result[2], result[3], result[4], result[5])
+    
+class Cupom:
+    def __init__(self, id, nome, valor):
+        self.id = id
+        self.nome = nome
+        self.valor = valor
+        self.ativo = True
+
+    def adicionar_cupom(nome, valor):
+        insert_query = 'INSERT INTO cupom (nome, valor, ativo) VALUES (%s, %s, %s)'
+        values = (nome, valor, True)
+        cur.execute(insert_query, values)
+        conn.commit()
+
+    def remover_cupom(id):
+        cur.execute(f"UPDATE cupom set ativo = FALSE WHERE id = {id}")
+        conn.commit()
+
+    def get_cupom(id):
+        cur.execute(f"SELECT * FROM cupom WHERE cupom.ativo = True and cupom.id = {id}")
+        result = cur.fetchone()
+        if result == None:
+            return None
+        return {"id": result[0], "nome": result[1], "valor": result[2]}
+    
+    def get_cupons():
+        cupons = []
+        cur.execute(f"SELECT * FROM cupom WHERE cupom.ativo = True")
+        dados = cur.fetchall()
+        for cupom in dados:
+            res = {"id": cupom[0], "nome": cupom[1], "valor": cupom[2]}
+            cupons.append(res)
+        return cupons
+    
+    def validar_cupom(nome):
+        cur.execute(f"SELECT * FROM cupom WHERE cupom.ativo = True AND cupom.nome = '{nome}'")
+        dados = cur.fetchone()
+        valor = float(dados[2])
+        return valor
+

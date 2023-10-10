@@ -1,4 +1,4 @@
-from database import Cliente, Produto, cur
+from database import Cliente, Produto, Cupom, cur
 
 # Testes CLIENTE
 def test_limpar_db():
@@ -29,6 +29,8 @@ def test_get_client():
 def test_zerar_db():
     cur.execute("DELETE FROM produto;")
     cur.execute("SELECT setval('produto_id_seq', 1, false);")
+    cur.execute("DELETE FROM cupom;")
+    cur.execute("SELECT setval('cupom_id_seq', 1, false);")
 
 def test_cadastro_produto():
     produto_1 = Produto.adicionar_produto("X-Burguer", "180g de CARNE BOVINA", "16.99", "hamburguer", "xburguer.jpg")
@@ -57,5 +59,21 @@ def test_get_produtos():
 
 # def test_editar_produto_get_lanche():
 #     Produto.editar_produto(2, "X-Baleia", 19.99, "Grandão", "x-baleia.png")
-#     produto = Produto.get_lanche(2)
+#     produto = Produto.get_produto(2)
 #     assert produto['nome'] == "X-Baleia"
+
+def teste_adicionar_cupom():
+    Cupom.adicionar_cupom("Impacta", 9.99)
+    Cupom.adicionar_cupom("Desconto", 5.99)
+    cupom = Cupom.get_cupom(1)
+    assert cupom['nome'] == "Impacta"
+    cupom_2 = Cupom.get_cupom(2)
+    assert cupom_2['nome'] == "Desconto"
+
+def test_validar_cupom():
+    cupom = Cupom.validar_cupom("Impacta")
+    assert cupom == 9.99
+
+    cupom_2 = Cupom.validar_cupom("Desconto")
+    assert cupom_2 == 5.99
+    

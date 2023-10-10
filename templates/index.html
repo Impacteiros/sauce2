@@ -56,6 +56,9 @@
                         {% for adicional in adicionais %}
                         <li><input type="number" name="{{adicional.nome}}" value="0"> {{ adicional.nome }} </li>
                         {% endfor %}
+                        <li>
+                            <label for="obs">Observações:</label><br>
+                            <input type="textarea" name="obs" placeholder="Sem queijo, sem salada, etc."></li>
                     </ul>
                     <button type="submit">Enviar ao carrinho</button>
                     </form>

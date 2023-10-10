@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_socketio import SocketIO
-from backup import backup_file
 import database
 import eventlet
 
@@ -10,7 +9,7 @@ app.config['SECRET_KEY'] = "!yw2gC8!BeM3"
 
 socketio = SocketIO(app)
 
-lista_carrinho = {}
+
 pedidos_cozinha = {}
 
 
@@ -50,12 +49,6 @@ def pesquisa_cliente():
     if resultado:
         return redirect(url_for("selecao"))
     return "Não encontrou"
-    
-@app.route("/backup")
-def backup():
-    if validar_perm():
-        response = backup_file()
-        return "Backup feito com sucesso"
 
 @app.route("/cadastro/cliente", methods=["POST"])
 def cadastro_cliente():
@@ -70,12 +63,108 @@ def cadastro_cliente():
 
 @app.route("/")
 def home():
+    if 'carrinho' not in session:
+        session['carrinho'] = []
+    print(session['carrinho'])
     lanches = database.Produto.get_lanches()
     bebidas = database.Produto.get_bebidas()
     adicionais = database.Adicional.get_adicionais()
 
     return render_template("index.html", lanches=lanches, bebidas=bebidas,
                            adicionais=adicionais)
+
+
+@app.route("/carrinho/", methods=["POST", "GET"])
+def carrinho():
+    lanches = database.Produto.get_lanches()
+    bebidas = database.Produto.get_bebidas()
+    adicionais = database.Adicional.get_adicionais()
+    cupons = database.Cupom.get_cupons()
+
+    carrinho_render = []
+    cupom_valor = 0
+    preco_total = 0
+    if "carrinho" in session:
+        for produto in session['carrinho']:
+            produto_carrinho = database.Produto.get_produto(produto['id'])
+            produto_carrinho['obs'] = produto['obs']
+            produto_carrinho['id_carrinho'] = produto['id_carrinho']
+            produto_carrinho['adicionais'] = ', '.join(f'{item[0]}: {item[1]}' for item in produto['adicionais'])
+            preco_total += float(produto['preco'])
+            carrinho_render.append(produto_carrinho)
+
+    if request.method == "POST":
+        cupom = request.form.get("cupom")
+        cupom_valor = database.Cupom.validar_cupom(cupom)
+        if cupom_valor:
+            session['cupom'] = cupom_valor
+
+        return render_template("carrinho.html", carrinho=carrinho_render, 
+                            lanches=lanches, bebidas=bebidas, preco_total=float(preco_total), cupom=cupom_valor)
+    
+    return render_template("carrinho.html", carrinho=carrinho_render, 
+                           lanches=lanches, bebidas=bebidas, preco_total=float(preco_total), cupom=cupom_valor)
+
+@app.route("/carrinho/adicionar/<id>", methods=["GET", "POST"])
+def adicinar_carrinho(id):
+    adicionais = []
+    produto = database.Produto.get_produto(id)
+    obs = ""
+    if request.method == "POST":
+        obs = request.form.get("obs")
+        selecao = request.form.items()
+        for add in selecao:
+            if add[0] != "obs" and add[1] != "0":
+                adicionais.append(add)
+        
+    id_carrinho = str(len(session['carrinho']) + 1)
+
+    session['carrinho'].append(
+        {"id_carrinho": id_carrinho, "id": id, "nome": produto['nome'], "preco": produto['preco'], "adicionais": adicionais, "obs": obs}
+    )
+
+    flash(f"Você adicionou {produto['nome']} no carrinho", "adicionado")
+    return redirect("/")
+
+@app.route("/carrinho/remover/<id>")
+def remover_carrinho(id):
+
+    carrinho = session['carrinho']
+
+    for produto in carrinho:
+        if produto['id_carrinho'] == id:
+            carrinho.remove(produto)
+            break
+
+    session['carrinho'] = carrinho
+    
+    return redirect("/carrinho")
+
+@app.route("/carrinho/enviar/", methods=["POST", "GET"])
+def enviar_cozinha():
+    mesa_numero = session['mesa']
+    produtos_enviar = []
+    atualizar_cozinha()
+
+    if "cupom" in session:
+        cupom = session["cupom"]
+    else:
+        cupom = "Nenhum"
+
+    for id in lista_carrinho:
+        query_result = database.session.query(database.Produto).get(id)
+        produtos_enviar.append({"nome": query_result.nome, "id": id, "preco": query_result.preco, "id_cliente": session['id_cliente'], "adicionais": lista_carrinho[id], "cupom": cupom})
+    
+    pedidos_cozinha[mesa_numero] = produtos_enviar
+
+    lista_carrinho.clear()
+    session.pop('mesa')
+    session.pop('id_cliente')
+    if "cupom" in session:
+        session.pop("cupom")
+    flash("Pedido enviado para produção.", "sucesso")
+    return redirect(url_for("selecao"))
+
 
 @app.route("/login/", methods=["POST", "GET"])
 def login():
@@ -131,77 +220,9 @@ def cadastro_cupom():
     if request.method == "POST":
         cupom = request.form.get("cupom")
         valor = request.form.get("valor")
-        database.cadastrar_cupom(cupom, valor)
+        database.Cupom.adicionar_cupom(cupom, valor)
         return redirect(url_for("gerenciar"))
     return render_template("cadastro_cupom.html")
-
-
-@app.route("/carrinho/", methods=["POST", "GET"])
-def carrinho():
-    cargo = session['usuario'][1]
-    carrinho_render = []
-    cupom = 0
-    preco_total = 0
-    for id in lista_carrinho:
-        produto = database.session.query(database.Produto).get(id)
-        preco_total += produto.preco
-        carrinho_render.append(produto)
-
-    if request.method == "POST":
-        cupom = request.form.get("cupom")
-        cupom_info = database.validar_cupom(cupom)
-        if cupom_info:
-            session['cupom'] = cupom_info.cupom
-            cupom = float(cupom_info.valor)
-
-        return render_template("carrinho.html", cargo=cargo, carrinho=carrinho_render, 
-                            lanches=lanches, bebidas=bebidas, preco_total=float(preco_total), cupom=cupom)
-    
-    return render_template("carrinho.html", cargo=cargo, carrinho=carrinho_render, 
-                           lanches=lanches, bebidas=bebidas, preco_total=float(preco_total), cupom=cupom)
-
-@app.route("/carrinho/adicionar/<id>", methods=["GET", "POST"])
-def adicinar_carrinho(id):
-    adicionais = {}
-
-    for nome, qtd in request.form.items():
-        adicionais[nome] = int(qtd)
-
-    produto = database.get_produto(id)
-    nome = produto.nome
-    flash(f"Você adicionou {nome} no carrinho", "adicionado")
-    lista_carrinho[id] = adicionais
-    return redirect("/")
-
-@app.route("/carrinho/remover/<id>")
-def remover_carrinho(id):
-    lista_carrinho.pop(id)
-    return redirect("/carrinho")
-
-@app.route("/carrinho/enviar/", methods=["POST", "GET"])
-def enviar_cozinha():
-    mesa_numero = session['mesa']
-    produtos_enviar = []
-    atualizar_cozinha()
-
-    if "cupom" in session:
-        cupom = session["cupom"]
-    else:
-        cupom = "Nenhum"
-
-    for id in lista_carrinho:
-        query_result = database.session.query(database.Produto).get(id)
-        produtos_enviar.append({"nome": query_result.nome, "id": id, "preco": query_result.preco, "id_cliente": session['id_cliente'], "adicionais": lista_carrinho[id], "cupom": cupom})
-    
-    pedidos_cozinha[mesa_numero] = produtos_enviar
-
-    lista_carrinho.clear()
-    session.pop('mesa')
-    session.pop('id_cliente')
-    if "cupom" in session:
-        session.pop("cupom")
-    flash("Pedido enviado para produção.", "sucesso")
-    return redirect(url_for("selecao"))
 
 @app.route("/deslogar/")
 def deslogar():
@@ -211,17 +232,18 @@ def deslogar():
 
 @app.route("/debug/")
 def debug():
-    return database.Produto.get_lanches()
+    return session['carrinho']
 
 @app.route("/gerenciar/")
 def gerenciar():
     lanches = database.Produto.get_lanches()
     bebidas = database.Produto.get_bebidas()
-    return render_template("gerenciar.html", lanches=lanches, bebidas=bebidas)
+    cupons = database.Cupom.get_cupons()
+    return render_template("gerenciar.html", lanches=lanches, bebidas=bebidas, cupons=cupons)
 
 @app.route("/gerenciar/cupom/remover/<id>")
 def remover_cupom(id):
-    database.deletar_cupom(id)
+    database.Cupom.remover_cupom(id)
     return redirect(url_for("gerenciar"))
 
 
@@ -270,9 +292,9 @@ def editar(id):
             disponivel = False
 
         url_imagem = request.form.get("url")
-        database.editar_produto(id, nome, descricao, preco, categoria, url_imagem, disponivel)
+        database.Produto.editar_produto(id, nome, descricao, preco, categoria, url_imagem, disponivel)
         return redirect(url_for("gerenciar"))
-    produto = database.get_produto(id)
+    produto = database.Produto.get_produto(id)
     return render_template("editar_produto.html", produto=produto)
 
 @app.route("/consulta/<id>")

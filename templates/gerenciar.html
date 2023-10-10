@@ -51,7 +51,7 @@
         <ul>
         {% for cupom in cupons %}
 
-        <li>{{ cupom.cupom }}: {{cupom.valor}} <a href="/gerenciar/cupom/remover/{{cupom.id}}">X</a></li>
+        <li>{{ cupom.nome }}: R$ {{cupom.valor}} <a href="/gerenciar/cupom/remover/{{cupom.id}}">X</a></li>
 
         {% endfor %}
         </ul>
