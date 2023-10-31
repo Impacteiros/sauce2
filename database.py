@@ -1,7 +1,5 @@
-import os
 import psycopg2
 import hashlib
-from datetime import datetime
 
 DATABASE_URL = "dbname=sauce user=foo password=pass host=localhost port=5432"
 conn = psycopg2.connect(DATABASE_URL)
@@ -78,7 +76,7 @@ class Cliente:
     def get_cliente(celular):
         cur.execute(f"SELECT * FROM usuario WHERE usuario.celular = '{celular}';")
         result = cur.fetchone()
-        if result == None:
+        if result is None:
             return None
         res = {"id": result[0], "nome": result[1], "celular": result[2]}
         return res
@@ -99,7 +97,7 @@ class Cliente:
         cur.execute('SELECT * FROM usuario WHERE usuario.celular = %s AND usuario.senha = %s', (usuario, senha_hash))
         validation = cur.fetchone()
 
-        if validation == None:
+        if validation is None:
             return False
         res = {"id": validation[0], "nome": validation[1], "celular": validation[2]}
         return res
@@ -123,7 +121,7 @@ class Funcionario:
     def get_funcionario(usuario):
         cur.execute('SELECT * FROM funcionario WHERE funcionario.usuario = %s', (usuario,))
         result = cur.fetchone()
-        if result == None:
+        if result is None:
             return None
         return result
 
@@ -132,7 +130,7 @@ class Funcionario:
         cur.execute('SELECT * FROM funcionario WHERE funcionario.usuario = %s AND funcionario.senha = %s', (usuario, senha_hash))
         validation = cur.fetchone()
 
-        if validation == None:
+        if validation is None:
             return False
         return validation
 
@@ -179,7 +177,7 @@ class Produto:
     def get_produto(id):
         cur.execute(f"SELECT * FROM produto WHERE produto.ativo = True AND produto.id = {id}")
         result = cur.fetchone()
-        if result == None:
+        if result is None:
             return None
         res = {"id": result[0], "nome": result[1], "preco": result[2], "descricao": result[3], "url_imagem": result[4], "categoria": result[5], "ativo": result[6], "disponivel": result[7]}
         return res
@@ -234,7 +232,7 @@ class Adicional:
     def get_adicional(id):
         cur.execute(f"SELECT * FROM adicional WHERE adicional.ativo = True AND adicional.id = {id}")
         result = cur.fetchone()
-        if result == None:
+        if result is None:
             return None
         return Adicional(result[0], result[1], result[2], result[3], result[4], result[5])
     
@@ -258,13 +256,13 @@ class Cupom:
     def get_cupom(id):
         cur.execute(f"SELECT * FROM cupom WHERE cupom.ativo = True and cupom.id = {id}")
         result = cur.fetchone()
-        if result == None:
+        if result is None:
             return None
         return {"id": result[0], "nome": result[1], "valor": result[2]}
     
     def get_cupons():
         cupons = []
-        cur.execute(f"SELECT * FROM cupom WHERE cupom.ativo = True")
+        cur.execute("SELECT * FROM cupom WHERE cupom.ativo = True")
         dados = cur.fetchall()
         for cupom in dados:
             res = {"id": cupom[0], "nome": cupom[1], "valor": cupom[2]}
@@ -297,7 +295,7 @@ class Endereco:
     def get_endereco(id):
         cur.execute(f"SELECT * FROM endereco WHERE endereco.id = {id}")
         result = cur.fetchone()
-        if result == None:
+        if result is None:
             return None
         return {"id_cliente": result[0], "rua": result[1], "numero": result[2], "complemento": result[3], "bairro": result[4], "cep": result[5]}
     
@@ -305,7 +303,7 @@ class Endereco:
         enderecos = []
         cur.execute(f"SELECT * FROM endereco WHERE endereco.id_cliente = '{id_cliente}'")
         result = cur.fetchall()
-        if result == None:
+        if result is None:
             return None
         for endereco in result:
             res = {"id": endereco[0], "id_cliente": endereco[1], "rua": endereco[2], "numero": endereco[3], "complemento": endereco[4], "bairro": endereco[5], "cidade": endereco[6], "cep": endereco[7]}
@@ -313,7 +311,7 @@ class Endereco:
         return enderecos
 
     def get_enderecos():
-        cur.execute(f"SELECT * FROM endereco")
+        cur.execute("SELECT * FROM endereco")
         dados = cur.fetchall()
         enderecos = []
         for endereco in dados:

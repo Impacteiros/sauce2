@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_socketio import SocketIO
 import database
-import eventlet
 
 app = Flask(__name__)
 app.secret_key = "!yw2gC8!BeM3"
@@ -51,8 +50,6 @@ def home():
 def carrinho():
     lanches = database.Produto.get_lanches()
     bebidas = database.Produto.get_bebidas()
-    adicionais = database.Adicional.get_adicionais()
-    cupons = database.Cupom.get_cupons()
     cliente = checar_login()
 
     carrinho_render = []
