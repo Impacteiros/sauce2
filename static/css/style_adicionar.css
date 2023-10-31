@@ -8,10 +8,49 @@ html {
     background-size: cover;
 }
 
+@media only screen and (min-width: 300px) {
+    .header {
+      height: 10em;
+    }
+    }
+
 label {
     font-size: 2vh;
     display: block;
     margin-bottom: 3px;
+}
+
+header {
+    display: flex;
+    background-color: #caa605;
+    height: 5em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+header i, a {
+    padding: 0.2em;
+    color: inherit;
+    font-size: 1.5em;
+}
+
+.link_cadastro {
+    margin-top: 1em;
+    width: 100%;
+    height: 4vh;
+    font-size: 2vh;
+    background-color: #ff9100;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.link_cadastro a {
+    text-decoration: none;
+    color: inherit;
 }
 
 h1 {
@@ -82,7 +121,7 @@ form {
     padding-top: 3vh;
     background-color: rgba(0, 0, 0, 0.592);
     width: 100%;
-    height: 100%;
+    height: 90%;
     align-items: center;
     justify-content: center;
     display: flex;
@@ -123,4 +162,6 @@ form {
     text-align: center;
     color: #FF0000;
     margin: 0;
+    padding-bottom: 0.5em;
+    font-weight: bold;
 }

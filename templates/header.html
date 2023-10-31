@@ -1,6 +1,9 @@
 {% block header %}
 
 <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/3.1.0/socket.io.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+
 <script type="text/javascript" charset="utf-8">
     var socket = io.connect('http://' + document.domain + ':' + location.port);
 
@@ -24,6 +27,6 @@
     {% if cargo == "administrador" %}<a href="/gerenciar"><i class="fas fa-cogs"></i></a>
     <a href="/adicionar"><i class="fas fa-plus"></i></a>{% endif %}
     <a href="/carrinho"><i class="fas fa-shopping-cart"></i></a>
-    <a href="/deslogar"><i class="fas fa-sign-out-alt"></i></a>
+    {% if usuario == None %}<a href="/login"><i class="fas fa-sign-in-alt"></i></a>{% endif %}{% if usuario %}<a href="/deslogar"><i class="fas fa-sign-out-alt"></i></a>{% endif %}
 </div>
 {% endblock %}

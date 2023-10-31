@@ -3,6 +3,7 @@
 <head>
     <link rel="stylesheet" href="{{url_for('static', filename="css/style.css")}}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+    <link rel="icon" type="image/x-icon" href="{{url_for('static', filename="images/favicon.ico")}}">
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,7 +11,33 @@
 
 </head>
 <body>
-    {% include 'header.html' %}    
+    {% include 'header.html' %}
+    <div id="cadastro_endereco" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3>Dados do endereço</h3>
+        <form method="POST" action="/endereco/cadastrar" class="cadastro_endereco">
+            <ul>
+            <li>
+            <label for="rua">Rua</label><br>
+            <input id="rua" name="rua" type="text"></li>
+            <li>
+            <label for="numero">Numero</label><br>
+            <input id="numero" name="numero" type="text"></li>
+            <li>
+            <label for="complemento">Complemento</label><br>
+            <input id="complemento" name="complemento" type="text"></li>
+            <li>
+            <label for="bairro">Bairro</label><br>
+            <input id="bairro" name="bairro" type="text">
+            <li>
+            <label for="cep">CEP</label><br>
+            <input id="bairro" name="cep" type="text" maxlength="8"></li>
+            <input type="submit" value="Cadastrar">
+            </ul>
+        </form>
+    </div>
+    </div>
     <center><h1>Carrinho</h1></center>
     <div class="container">
     {% for produto in carrinho %}
@@ -31,19 +58,72 @@
     </div>
     {% endfor %}
     {% if carrinho %}
-    <form method="post" style="width: 100%; text-align: center;">
+    <form method="post" style="width: 100%; text-align: center;" action="/cupom/">
         Cupom: <input type="text" name="cupom"><input type="submit">
     </form>
+    {% if usuario %}
+    <div class="enderecos">
+        <h3 style="padding-top: 5px; padding-bottom: 5px;">Selecione o endereço de entrega:</h3>
+        <ul>
+        <form>
+        {% for end in enderecos %}
+        <li><input type="radio" name="endereco">{{ end.endereco }} <a href="/endereco/remover/{{end.id}}" style="color: #FF0000;"><i class="fas fa-times"></i>(REMOVER)</a></li>
+        {% endfor %}
+        </form>
+        </ul>
+        <button class="openButton" data-menu="cadastro_endereco">Cadastrar novo endereço</button>
+    </div>
+    {% endif %}
     <div class="mesa">
         <center><h2>SUB-TOTAL: R$ {{"%.2f" % preco_total }}</h1></center>
         <center><h3>FRETE: R$ 4.99</h3></center>
         {% if cupom > 0 %}<h3 style="margin-bottom: 0;">Desconto CUPOM: R$ {{"%.2f" % cupom }}</h3>{% endif %}
         <center><h1 style="margin-top: 0;">TOTAL: R$ {{"%.2f" % (preco_total - cupom + 4.99) }}</h1></center>
-        <form method="post" action="/carrinho/enviar">
+        {% if usuario %}<form method="post" action="/carrinho/enviar">
             <input type="submit" style="font-size: 2rem;" value="Finalizar pedido">
         </form>
+        {% else %}
+        <a href="/login"><button style="font-size: 2rem;">Logar</button></a>
     </div>
+    {% endif %}
     {% endif %}
 </div>
 </body>
+
+<script>
+    // Obtém todos os botões de abertura
+    var openButtons = document.getElementsByClassName("openButton");
+
+    // Atribui os event listeners a cada botão
+    for (var i = 0; i < openButtons.length; i++) {
+        openButtons[i].addEventListener("click", function () {
+            var menuId = this.getAttribute("data-menu");
+            var menu = document.getElementById(menuId);
+            menu.style.display = "flex";
+        });
+    }
+
+    // Obtém todos os botões de fechamento
+    var closeButtons = document.getElementsByClassName("close");
+
+    // Atribui os event listeners a cada botão de fechamento
+    for (var j = 0; j < closeButtons.length; j++) {
+        closeButtons[j].addEventListener("click", function () {
+            var menu = this.parentNode.parentNode;
+            menu.style.display = "none";
+        });
+    }
+
+    // Fecha o menu quando o usuário clica fora dele
+    window.addEventListener("click", function (event) {
+        var menus = document.getElementsByClassName("modal");
+        for (var k = 0; k < menus.length; k++) {
+            if (event.target == menus[k]) {
+                menus[k].style.display = "none";
+            }
+        }
+    });
+
+</script>
+
 </html>

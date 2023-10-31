@@ -3,22 +3,28 @@
 
 <head>
     <title>Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
     <link rel="stylesheet" href="{{url_for('static', filename="css/style_adicionar.css")}}">
+    <link rel="icon" type="image/x-icon" href="{{url_for('static', filename="images/favicon.ico")}}">
 </head>
 
 <body>
+    <header><a href="/"><i class="fas fa-home"></i></a>
+        <a href="/carrinho"><i class="fas fa-shopping-cart"></i></a>
+    </header>
     <div class="wrapper">
         <div class="content">
             <div id="form">
                 <h1>Login</h1>
                 <form method="post">
-                    <label for="usuario">Usuário:</label>
-                    <input type="text" id="usuario" name="usuario"></input>
+                    <label for="celular">Celular:</label>
+                    <input type="text" id="usuario" name="usuario" pattern="\d{11}" maxlength="11" required></input>
 
                     <label for="preco">Senha:</label>
-                    <input type="password" id="senha" name="senha">
+                    <input type="password" id="senha" name="senha" required>
 
                     <input type="submit" value="Logar">
+                    <button class="link_cadastro"><a href="/cadastro/usuario">Criar nova conta</a></button>
                 </form>
                 <p class="error">{{ erro }}</p>
             </div>

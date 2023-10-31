@@ -18,7 +18,8 @@ cur.execute('CREATE TABLE IF NOT EXISTS funcionario (id SERIAL PRIMARY KEY,'
 cur.execute('CREATE TABLE IF NOT EXISTS usuario (id SERIAL PRIMARY KEY,'
             'nome VARCHAR(100),'
             'celular VARCHAR(11),'
-            'senha VARCHAR(255))'
+            'senha VARCHAR(255),'
+            'endereco VARCHAR(3))'
             )
 
 cur.execute('CREATE TABLE IF NOT EXISTS produto (id SERIAL PRIMARY KEY,'
@@ -52,8 +53,18 @@ cur.execute('CREATE TABLE IF NOT EXISTS pedido ('
 cur.execute('CREATE TABLE IF NOT EXISTS cupom (id SERIAL PRIMARY KEY,'
             'nome VARCHAR(50),'
             'valor NUMERIC(5, 2),'
-            'ativo BOOLEAN)')
+            'ativo BOOLEAN)'
+            )
 
+cur.execute('CREATE TABLE IF NOT EXISTS endereco (id SERIAL PRIMARY KEY,'
+            'id_cliente VARCHAR(10),'
+            'rua VARCHAR(255),'
+            'numero INT,'
+            'complemento VARCHAR(255),'
+            'bairro VARCHAR(255),'
+            'cidade VARCHAR(255) DEFAULT\'Campo Grande\','
+            'cep VARCHAR(10))'
+            )
 
 conn.commit()
 
@@ -65,11 +76,11 @@ class Cliente:
         self.__senha = senha
 
     def get_cliente(celular):
-        cur.execute('SELECT * FROM usuario WHERE usuario.celular = %s', (celular,))
+        cur.execute(f"SELECT * FROM usuario WHERE usuario.celular = '{celular}';")
         result = cur.fetchone()
         if result == None:
             return None
-        res = {"nome": result[1], "celular": result[2]}
+        res = {"id": result[0], "nome": result[1], "celular": result[2]}
         return res
     
     def cadastrar_cliente(nome, celular, senha):
@@ -90,7 +101,7 @@ class Cliente:
 
         if validation == None:
             return False
-        res = {"nome": validation[1], "celular": validation[2]}
+        res = {"id": validation[0], "nome": validation[1], "celular": validation[2]}
         return res
 
 class Funcionario:
@@ -261,8 +272,55 @@ class Cupom:
         return cupons
     
     def validar_cupom(nome):
+        valor = 0
         cur.execute(f"SELECT * FROM cupom WHERE cupom.ativo = True AND cupom.nome = '{nome}'")
         dados = cur.fetchone()
-        valor = float(dados[2])
+        if dados:
+            valor = float(dados[2])
         return valor
 
+class Endereco:
+    def __init__(self, id, rua, numero, complemento, bairro, cep):
+        self.id = id
+        self.rua = rua
+        self.numero = numero
+        self.complemento = complemento
+        self.bairro = bairro
+        self.cep = cep
+
+    def cadastrar_endereco(id_cliente, rua, numero, complemento, bairro, cep):
+        insert_query = 'INSERT INTO endereco (id_cliente, rua, numero, complemento, bairro, cep) VALUES (%s, %s, %s, %s, %s, %s)'
+        values = (id_cliente, rua, numero, complemento, bairro, cep)
+        cur.execute(insert_query, values)
+        conn.commit()
+
+    def get_endereco(id):
+        cur.execute(f"SELECT * FROM endereco WHERE endereco.id = {id}")
+        result = cur.fetchone()
+        if result == None:
+            return None
+        return {"id_cliente": result[0], "rua": result[1], "numero": result[2], "complemento": result[3], "bairro": result[4], "cep": result[5]}
+    
+    def get_enderecos_cliente(id_cliente):
+        enderecos = []
+        cur.execute(f"SELECT * FROM endereco WHERE endereco.id_cliente = '{id_cliente}'")
+        result = cur.fetchall()
+        if result == None:
+            return None
+        for endereco in result:
+            res = {"id": endereco[0], "id_cliente": endereco[1], "rua": endereco[2], "numero": endereco[3], "complemento": endereco[4], "bairro": endereco[5], "cidade": endereco[6], "cep": endereco[7]}
+            enderecos.append(res)
+        return enderecos
+
+    def get_enderecos():
+        cur.execute(f"SELECT * FROM endereco")
+        dados = cur.fetchall()
+        enderecos = []
+        for endereco in dados:
+            res = {"id": endereco[0], "rua": endereco[1], "numero": endereco[2], "complemento": endereco[3], "bairro": endereco[4], "cep": endereco[5]}
+            enderecos.append(res)
+        return enderecos
+    
+    def remover_endereco(id):
+        cur.execute(f"DELETE FROM endereco WHERE endereco.id = {id}")
+        conn.commit()

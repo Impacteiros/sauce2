@@ -20,6 +20,7 @@
 </head>
 
 <body>
+    <div id="cadastro-container"></div>
     {% with adicionado = get_flashed_messages() %}
     {% if adicionado %}
     <link rel="stylesheet" href="{{url_for('static', filename="css/style_selecao.css")}}"> {%endif%}
@@ -45,7 +46,6 @@
         </div>
         {% if lanches %}
         {% for lanche in lanches %}
-
         <div class="infos">
             <div id="menu-{{ lanche.id }}" class="modal">
                 <div class="modal-content">

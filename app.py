@@ -13,42 +13,14 @@ socketio = SocketIO(app)
 pedidos_cozinha = {}
 
 
-def validar_perm():
-    if session:
-        if session['usuario'][1] == 'administrador':
-            return True
-    return False
+def checar_login():
+    if 'usuario' not in session:
+        return None
+    return session['usuario']
 
 @socketio.on('atualizacao')
 def atualizar_cozinha():
     socketio.emit('atualizacao', {'data': "Dados atualizados"})
-
-@app.route("/selecao/", methods=["GET", "POST"])
-def selecao():
-    nome = request.form.get("pesquisa")
-    session['mesa'] = request.form.get("mesa")
-    id_cliente = request.form.get("id_cliente")
-    sem_cadastro = request.form.get("sem_cadastro")
-    if sem_cadastro:
-        session['id_cliente'] = 0
-        return redirect(url_for("home"))
-    if id_cliente:
-        session['id_cliente'] = id_cliente
-        return redirect(url_for("home"))
-    if nome:
-        resultado = database.pesquisa_cliente(nome)
-        if resultado:
-            return render_template("selecao.html", clientes=resultado)
-        return render_template("selecao.html", clientes=False)
-    return render_template("selecao.html")
-
-@app.route("/selecao/pesquisa", methods=["GET", "POST"])
-def pesquisa_cliente():
-    nome = request.form.get("pesquisa")
-    resultado = database.pesquisa_cliente(nome)
-    if resultado:
-        return redirect(url_for("selecao"))
-    return "Não encontrou"
 
 @app.route("/cadastro/cliente", methods=["POST"])
 def cadastro_cliente():
@@ -65,13 +37,14 @@ def cadastro_cliente():
 def home():
     if 'carrinho' not in session:
         session['carrinho'] = []
-    print(session['carrinho'])
+    cliente = checar_login()
+    
     lanches = database.Produto.get_lanches()
     bebidas = database.Produto.get_bebidas()
     adicionais = database.Adicional.get_adicionais()
 
     return render_template("index.html", lanches=lanches, bebidas=bebidas,
-                           adicionais=adicionais)
+                           adicionais=adicionais, usuario=cliente)
 
 
 @app.route("/carrinho/", methods=["POST", "GET"])
@@ -80,8 +53,11 @@ def carrinho():
     bebidas = database.Produto.get_bebidas()
     adicionais = database.Adicional.get_adicionais()
     cupons = database.Cupom.get_cupons()
+    cliente = checar_login()
 
     carrinho_render = []
+    carrinho_enderecos = []
+
     cupom_valor = 0
     preco_total = 0
     if "carrinho" in session:
@@ -93,6 +69,12 @@ def carrinho():
             preco_total += float(produto['preco'])
             carrinho_render.append(produto_carrinho)
 
+    if "usuario" in session:
+        enderecos = database.Endereco.get_enderecos_cliente(session['usuario']['id'])
+        for endereco in enderecos:
+            end = f"Rua: {endereco['rua']}, Nº {endereco['numero']}, Cidade: Campo Grande, Bairro: {endereco['bairro']}, CEP: {endereco['cep']}"
+            completo = {"endereco": end, "id": endereco['id']}
+            carrinho_enderecos.append(completo)
     if request.method == "POST":
         cupom = request.form.get("cupom")
         cupom_valor = database.Cupom.validar_cupom(cupom)
@@ -100,10 +82,10 @@ def carrinho():
             session['cupom'] = cupom_valor
 
         return render_template("carrinho.html", carrinho=carrinho_render, 
-                            lanches=lanches, bebidas=bebidas, preco_total=float(preco_total), cupom=cupom_valor)
+                            lanches=lanches, bebidas=bebidas, preco_total=float(preco_total), cupom=cupom_valor, usuario=cliente, endereco=carrinho_enderecos)
     
     return render_template("carrinho.html", carrinho=carrinho_render, 
-                           lanches=lanches, bebidas=bebidas, preco_total=float(preco_total), cupom=cupom_valor)
+                           lanches=lanches, bebidas=bebidas, preco_total=float(preco_total), cupom=cupom_valor, usuario=cliente, enderecos=carrinho_enderecos)
 
 @app.route("/carrinho/adicionar/<id>", methods=["GET", "POST"])
 def adicinar_carrinho(id):
@@ -165,6 +147,22 @@ def enviar_cozinha():
     flash("Pedido enviado para produção.", "sucesso")
     return redirect(url_for("selecao"))
 
+@app.route("/endereco/cadastrar", methods=['POST'])
+def cadastrar_endereco():
+    id_cliente = session['usuario']['id']
+    rua = request.form.get("rua")
+    numero = request.form.get("numero")
+    complemento = request.form.get("complemento")
+    bairro = request.form.get("bairro")
+    cep = request.form.get("cep")
+
+    database.Endereco.cadastrar_endereco(id_cliente, rua, numero, complemento, bairro, cep)
+    return redirect(url_for("carrinho"))
+
+@app.route("/endereco/remover/<id>")
+def remover_endereco(id):
+    database.Endereco.remover_endereco(id)
+    return redirect(url_for("carrinho"))
 
 @app.route("/login/", methods=["POST", "GET"])
 def login():
@@ -174,10 +172,11 @@ def login():
     senha = request.form.get("senha")
     if usuario and senha:
         validacao = database.Cliente.validar_login(usuario, senha)
+        erro = "Usuario e/ou senha invalidos."
         if validacao:
-            session['usuario'] = [validacao[1], validacao[2]]
+            session['usuario'] = {"nome": validacao['nome'], "id": validacao['id'], "celular": validacao['celular']}
             return redirect(url_for("home"))
-        return render_template("login.html", erro=validacao[1])
+        return render_template("login.html", erro=erro)
     return render_template("login.html")
 
 
@@ -189,9 +188,11 @@ def cadastro_usuario():
     if nome and senha and celular:
         cadastrado = database.Cliente.get_cliente(celular)
         if cadastrado:
-            return "Usuário em uso"
+            erro = "Usuário já cadastrado."
+            return render_template("login.html", erro=erro)
         database.Cliente.cadastrar_cliente(nome, celular, senha)
-        return "Cadastrado com sucesso"
+        flash("Cadastro realizado com sucesso.", "sucesso")
+        return redirect(request.referrer)
     else:
         return render_template("cadastro_usuario.html")
 
@@ -226,13 +227,13 @@ def cadastro_cupom():
 
 @app.route("/deslogar/")
 def deslogar():
-    session.clear()
+    session.pop("usuario")
     return redirect("/login/")
 
 
 @app.route("/debug/")
 def debug():
-    return session['carrinho']
+    return session['usuario']
 
 @app.route("/gerenciar/")
 def gerenciar():
