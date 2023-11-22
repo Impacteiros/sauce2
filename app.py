@@ -185,11 +185,11 @@ def cadastro_usuario():
     if nome and senha and celular:
         cadastrado = database.Cliente.get_cliente(celular)
         if cadastrado:
-            erro = "Usuário já cadastrado."
-            return render_template("login.html", erro=erro)
+            aviso = "Usuário já cadastrado."
+            return render_template("login.html", aviso=aviso)
         database.Cliente.cadastrar_cliente(nome, celular, senha)
-        flash("Cadastro realizado com sucesso.", "sucesso")
-        return redirect(request.referrer)
+        flash("Cadastro realizado com sucesso. <br><center><a href='/login'>Clique aqui para logar</a></center>", "sucesso")
+        return redirect(url_for("home"))
     else:
         return render_template("cadastro_usuario.html")
 
