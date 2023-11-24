@@ -121,28 +121,27 @@ def remover_carrinho(id):
 
 @app.route("/carrinho/enviar/", methods=["POST", "GET"])
 def enviar_cozinha():
-    mesa_numero = session['mesa']
-    produtos_enviar = []
-    atualizar_cozinha()
+    if request.method == "POST":
+        if "carrinho" in session and session['carrinho']:
+            total = 0
+            for produto in session['carrinho']:
+                total += float(produto['preco'])
+            ids_lanches = ','.join(str(produto['id']) for produto in session['carrinho'])
+            id_cliente = session.get('usuario', {}).get('id', None)
+            atendente = "Online"
+            cupom = session.get('cupom', None)
 
-    if "cupom" in session:
-        cupom = session["cupom"]
-    else:
-        cupom = "Nenhum"
+            # Cria um objeto Pedido e envia para o banco de dados
+            pedido = database.Pedido.enviar_pedido(id_cliente, ids_lanches, total, atendente, cupom)
 
-    for id in lista_carrinho:
-        query_result = database.session.query(database.Produto).get(id)
-        produtos_enviar.append({"nome": query_result.nome, "id": id, "preco": query_result.preco, "id_cliente": session['id_cliente'], "adicionais": lista_carrinho[id], "cupom": cupom})
-    
-    pedidos_cozinha[mesa_numero] = produtos_enviar
+            if pedido:
+                print(pedido)
+                session['carrinho'] = []
+                session['cupom'] = None
+                flash(f"Pedido realizado com sucesso.<br>ID do pedido: {pedido.id}", "sucesso")
+                return redirect(url_for("home"))
 
-    lista_carrinho.clear()
-    session.pop('mesa')
-    session.pop('id_cliente')
-    if "cupom" in session:
-        session.pop("cupom")
-    flash("Pedido enviado para produção.", "sucesso")
-    return redirect(url_for("selecao"))
+    return redirect(url_for('carrinho'))
 
 @app.route("/endereco/cadastrar", methods=['POST'])
 def cadastrar_endereco():
@@ -193,25 +192,6 @@ def cadastro_usuario():
     else:
         return render_template("cadastro_usuario.html")
 
-
-
-@app.route("/cadastro/funcionario/", methods=["POST", "GET"])
-def cadastro():
-    if validar_perm():
-        nome = request.form.get("nome")
-        usuario = request.form.get("usuario")
-        senha = request.form.get("senha")
-        cargo = request.form.get("cargo")
-        if nome and usuario and senha and cargo:
-            cadastrado = database.validar_cadastro(usuario)
-            if cadastrado:
-                return "Usuário em uso"
-            database.cadastrar_funcionario(nome, usuario, senha, cargo)
-            return "Cadastrado com sucesso"
-        else:
-            return render_template("cadastro_funcionario.html")
-    return "Acesso negado"
-
 @app.route("/cadastro/cupom", methods=["GET", "POST"])
 def cadastro_cupom():
 
@@ -243,15 +223,6 @@ def gerenciar():
 def remover_cupom(id):
     database.Cupom.remover_cupom(id)
     return redirect(url_for("gerenciar"))
-
-
-@app.route("/gerenciar/funcionario")
-def gerenciar_funcionarios():
-    funcionarios = database.lista_funcionarios
-    cargo = session['usuario'][1]
-    if validar_perm():
-            return render_template("gerenciar_funcionarios.html", cargo=cargo, funcionarios=funcionarios)
-    return "Acesso negado", 403
 
 @app.route("/cadastro/produto/", methods=["POST", "GET"])
 def adicionar():
@@ -295,6 +266,12 @@ def editar(id):
     produto = database.Produto.get_produto(id)
     return render_template("editar_produto.html", produto=produto)
 
+@app.route("/pedidos")
+def listar_pedidos():
+    pedidos = database.Pedido.get_pedidos(session['usuario']['id'])
+
+    return render_template("pedidos.html", pedidos=pedidos)
+
 @app.route("/consulta/<id>")
 def consulta(id):
     retorno = database.session.query(database.Produto).get(id)
@@ -308,41 +285,6 @@ def remover(id):
     database.Produto.remover_produto(id)
     return redirect(request.referrer)
     # return "Acesso negado", 403
-
-@app.route("/funcionario/remover/<id>")
-def remover_funcionario(id):
-    if validar_perm():
-        database.remover_funcionario(id)
-        return redirect(request.referrer)
-    return "Acesso negado", 403
-
-@app.route("/pedidosfinalizados/")
-def pedidos_finalizados():
-    return render_template("listar_pedidos.html", pedidos=pedidos, lanches=lanches)
-
-
-@app.route("/cozinha/")
-def cozinha():
-    if not validar_perm():
-        return "Acesso negado"
-    query_resp = database.session.query(database.Pedido).order_by(database.Pedido.id.desc()).limit(5).all()
-    ultimos_pedidos = {}
-    lista_pedidos = []
-
-    for pedido in query_resp:
-        nome_lanches = []
-        ultimos_pedidos = {}
-        lanches = pedido.ids_lanches.split(",")
-        for id_lanche in lanches:
-            lanche = database.get_produto(id_lanche)
-            nome_lanches.append(lanche.nome)
-        
-        ultimos_pedidos["mesa"] = pedido.mesa
-        ultimos_pedidos["atendente"] = pedido.atendente
-        ultimos_pedidos["lanches"] = nome_lanches
-        lista_pedidos.append(ultimos_pedidos)
-
-    return render_template("cozinha.html", pedidos=pedidos_cozinha, atendente=session['usuario'][0], finalizados=lista_pedidos)
 
 @socketio.on('pedido')
 @app.route("/cozinha/finalizar/<id>", methods=["POST", "GET"])

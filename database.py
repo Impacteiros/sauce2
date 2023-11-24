@@ -1,5 +1,6 @@
 import psycopg2
 import hashlib
+from datetime import datetime
 
 DATABASE_URL = "dbname=sauce user=foo password=pass host=localhost port=5432"
 conn = psycopg2.connect(DATABASE_URL)
@@ -44,8 +45,7 @@ cur.execute('CREATE TABLE IF NOT EXISTS pedido ('
             'total NUMERIC(5, 2),'
             'data TIMESTAMP,'
             'atendente VARCHAR(20),'
-            'cupom VARCHAR(22),'
-            'mesa INTEGER)'
+            'cupom VARCHAR(22))'
 )
 
 cur.execute('CREATE TABLE IF NOT EXISTS cupom (id SERIAL PRIMARY KEY,'
@@ -322,3 +322,40 @@ class Endereco:
     def remover_endereco(id):
         cur.execute(f"DELETE FROM endereco WHERE endereco.id = {id}")
         conn.commit()
+
+class Pedido:
+    def __init__(self, id, id_cliente, ids_lanches, total, data, atendente, cupom):
+        self.id = id
+        self.id_cliente = id_cliente
+        self.ids_lanches = ids_lanches
+        self.total = total
+        self.data = data
+        self.atendente = atendente
+        self.cupom = cupom
+
+    @classmethod
+    def enviar_pedido(cls, id_cliente, ids_lanches, total, atendente, cupom):
+        try:
+            data = datetime.now()
+            insert_query = 'INSERT INTO pedido (id_cliente, ids_lanches, total, data, atendente, cupom) VALUES (%s, %s, %s, %s, %s, %s) RETURNING id'
+            values = (id_cliente, ids_lanches, total, data, atendente, cupom)
+
+            cur.execute(insert_query, values)
+            conn.commit()
+
+            # Obtém o ID do pedido recém-inserido
+            pedido_id = cur.fetchone()[0]
+
+            return cls(pedido_id, id_cliente, ids_lanches, total, data, atendente, cupom)
+        except Exception as e:
+            print(f"Erro ao enviar o pedido: {str(e)}")
+            return None
+        
+    def get_pedidos(id_cliente):
+        pedidos = []
+        cur.execute(f"SELECT * FROM pedido WHERE pedido.id_cliente = {id_cliente}")
+        dados = cur.fetchall()
+        for pedido in dados:
+            res = {"id": pedido[0], "id_cliente": pedido[1], "ids_lanches": pedido[2], "total": pedido[3], "data": pedido[4], "atendente": pedido[5], "cupom": pedido[6]}
+            pedidos.append(res)
+        return pedidos

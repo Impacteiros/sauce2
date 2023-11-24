@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="{{url_for('static', filename="css/style.css")}}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+    <link rel="icon" type="image/x-icon" href="{{url_for('static', filename="images/favicon.ico")}}">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meus Pedidos</title>
+</head>
+<body>
+    {% include 'header.html' %}
+    <center><h1>Meus Pedidos</h1></center>
+    <div class="container">
+        {% if pedidos %}
+            <ul class="lista-pedidos">
+                {% for pedido in pedidos %}
+                    <li class="pedido">
+                        <p>ID do Pedido: {{ pedido.id }}</p>
+                        <p>Data do Pedido: {{ pedido.data }}</p>
+                        <p>Total: R$ {{ "%.2f" % pedido.total }}</p>
+                        <!-- Adicione outros detalhes do pedido conforme necessário -->
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Você ainda não fez nenhum pedido.</p>
+        {% endif %}
+    </div>
+</body>
+</html>
