@@ -27,6 +27,7 @@
     {% if cargo == "administrador" %}<a href="/gerenciar"><i class="fas fa-cogs"></i></a>
     <a href="/adicionar"><i class="fas fa-plus"></i></a>{% endif %}
     <a href="/carrinho"><i class="fas fa-shopping-cart"></i></a>
+    {% if usuario %}<a href="/pedidos"><i class="far fa-file-alt"></i></a>{% endif %}
     {% if usuario == None %}<a href="/login"><i class="fas fa-sign-in-alt"></i></a>{% endif %}{% if usuario %}<a href="/deslogar"><i class="fas fa-sign-out-alt"></i></a>{% endif %}
 </div>
 {% endblock %}

@@ -78,8 +78,9 @@ def carrinho():
         if cupom_valor:
             session['cupom'] = cupom_valor
 
+
         return render_template("carrinho.html", carrinho=carrinho_render, 
-                            lanches=lanches, bebidas=bebidas, preco_total=float(preco_total), cupom=cupom_valor, usuario=cliente, endereco=carrinho_enderecos)
+                            lanches=lanches, bebidas=bebidas, preco_total=float(preco_total), cupom=cupom_valor, usuario=cliente, enderecos=carrinho_enderecos)
     
     return render_template("carrinho.html", carrinho=carrinho_render, 
                            lanches=lanches, bebidas=bebidas, preco_total=float(preco_total), cupom=cupom_valor, usuario=cliente, enderecos=carrinho_enderecos)
@@ -121,6 +122,7 @@ def remover_carrinho(id):
 
 @app.route("/carrinho/enviar/", methods=["POST", "GET"])
 def enviar_cozinha():
+    print(session['carrinho'])
     if request.method == "POST":
         if "carrinho" in session and session['carrinho']:
             total = 0
@@ -131,7 +133,7 @@ def enviar_cozinha():
             atendente = "Online"
             cupom = session.get('cupom', None)
 
-            # Cria um objeto Pedido e envia para o banco de dados
+            # Cria um objeto Pedido e envia para o banco de dados sem a necessidade de passar explicitamente os lanches
             pedido = database.Pedido.enviar_pedido(id_cliente, ids_lanches, total, atendente, cupom)
 
             if pedido:
@@ -247,6 +249,12 @@ def adicionar():
 
     return render_template("adicionar.html", lanches=lanches, bebidas=bebidas)
 
+@app.route("/cozinha/")
+def cozinha():
+    lista_pedidos = database.Pedido.pedidos_ativos()
+    return render_template("cozinha.html", pedidos=lista_pedidos)
+
+
 @app.route("/editar/<id>", methods=["GET", "POST"])
 def editar(id):
     if request.method == "POST":
@@ -270,7 +278,7 @@ def editar(id):
 def listar_pedidos():
     pedidos = database.Pedido.get_pedidos(session['usuario']['id'])
 
-    return render_template("pedidos.html", pedidos=pedidos)
+    return render_template("pedidos.html", pedidos=pedidos, usuario=session['usuario']['nome'])
 
 @app.route("/consulta/<id>")
 def consulta(id):
@@ -289,20 +297,7 @@ def remover(id):
 @socketio.on('pedido')
 @app.route("/cozinha/finalizar/<id>", methods=["POST", "GET"])
 def finalizar_pedido(id):
-
-    socketio.emit('pedido', id)
-    id_cliente = pedidos_cozinha[id][0]['id_cliente']
-    cupom = pedidos_cozinha[id][0]['cupom']
-    id_lanches = []
-    for produto in pedidos_cozinha[id]:
-        id_lanches.append(str(produto['id']))
-
-    preco_total = 0
-    for produto in pedidos_cozinha[id]:
-        preco_total += produto['preco']
-    pedidos_cozinha.pop(id)
-    ids = ",".join(id_lanches)
-    database.salvar_pedido(ids, id_cliente, session['usuario'][0], preco_total, id, cupom)
+    database.Pedido.finalizar_pedido(id)
     return redirect(url_for("cozinha"))
 
 if __name__ == "__main__":

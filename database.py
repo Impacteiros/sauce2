@@ -45,8 +45,8 @@ cur.execute('CREATE TABLE IF NOT EXISTS pedido ('
             'total NUMERIC(5, 2),'
             'data TIMESTAMP,'
             'atendente VARCHAR(20),'
-            'cupom VARCHAR(22))'
-)
+            'cupom VARCHAR(22),'
+            'finalizado BOOLEAN DEFAULT FALSE)')
 
 cur.execute('CREATE TABLE IF NOT EXISTS cupom (id SERIAL PRIMARY KEY,'
             'nome VARCHAR(50),'
@@ -324,7 +324,7 @@ class Endereco:
         conn.commit()
 
 class Pedido:
-    def __init__(self, id, id_cliente, ids_lanches, total, data, atendente, cupom):
+    def __init__(self, id, id_cliente, ids_lanches, total, data, atendente, cupom, lanches, finalizado):
         self.id = id
         self.id_cliente = id_cliente
         self.ids_lanches = ids_lanches
@@ -332,30 +332,82 @@ class Pedido:
         self.data = data
         self.atendente = atendente
         self.cupom = cupom
-
+        self.lanches = lanches if lanches is not None else []
+        self.finalizado = finalizado
+        
     @classmethod
-    def enviar_pedido(cls, id_cliente, ids_lanches, total, atendente, cupom):
+    def enviar_pedido(cls, id_cliente, ids_lanches, total, atendente, cupom, lanches=None, finalizado=False):
         try:
-            data = datetime.now()
-            insert_query = 'INSERT INTO pedido (id_cliente, ids_lanches, total, data, atendente, cupom) VALUES (%s, %s, %s, %s, %s, %s) RETURNING id'
-            values = (id_cliente, ids_lanches, total, data, atendente, cupom)
-
-            cur.execute(insert_query, values)
+            cur.execute('INSERT INTO pedido (id_cliente, ids_lanches, total, data, atendente, cupom, finalizado) VALUES (%s, %s, %s, NOW(), %s, %s, %s) RETURNING id',
+                        (id_cliente, ids_lanches, total, atendente, cupom, finalizado))
+            id_pedido = cur.fetchone()[0]
             conn.commit()
 
-            # Obtém o ID do pedido recém-inserido
-            pedido_id = cur.fetchone()[0]
+            if lanches is None:
+                lanches = []
 
-            return cls(pedido_id, id_cliente, ids_lanches, total, data, atendente, cupom)
+            return cls(id=id_pedido, id_cliente=id_cliente, ids_lanches=ids_lanches, total=total, data=datetime.now(), atendente=atendente, cupom=cupom, lanches=lanches, finalizado=finalizado)
+
+
         except Exception as e:
             print(f"Erro ao enviar o pedido: {str(e)}")
             return None
         
-    def get_pedidos(id_cliente):
+    @classmethod
+    def get_pedidos(cls, id_cliente):
         pedidos = []
-        cur.execute(f"SELECT * FROM pedido WHERE pedido.id_cliente = {id_cliente}")
+        cur.execute("SELECT * FROM pedido WHERE id_cliente = %s", (id_cliente,))
         dados = cur.fetchall()
-        for pedido in dados:
-            res = {"id": pedido[0], "id_cliente": pedido[1], "ids_lanches": pedido[2], "total": pedido[3], "data": pedido[4], "atendente": pedido[5], "cupom": pedido[6]}
-            pedidos.append(res)
+
+        for pedido_data in dados:
+            id_lanches = pedido_data[2].split(',')
+            lanches = []
+
+            for id_lanche in id_lanches:
+                lanche = Produto.get_produto(int(id_lanche))
+                if lanche:
+                    found = False
+                    for produto in lanches:
+                        if produto['nome'] == lanche['nome']:
+                            produto['quantidade'] += 1
+                            found = True
+                            break
+                    if not found:
+                        lanches.append({'nome': lanche['nome'], 'quantidade': 1})
+
+            pedido = cls(id=pedido_data[0], id_cliente=pedido_data[1], ids_lanches=pedido_data[2], total=pedido_data[3], data=pedido_data[4], atendente=pedido_data[5], cupom=pedido_data[6], finalizado=pedido_data[7], lanches=lanches)
+            pedidos.append(pedido)
+
+        return pedidos
+    
+    @classmethod
+    def finalizar_pedido(cls, id):
+        cur.execute(f"UPDATE pedido SET finalizado = TRUE WHERE id = {id}")
+        conn.commit()
+        return True
+
+    @classmethod
+    def pedidos_ativos(cls):
+        pedidos = []
+        cur.execute("SELECT * FROM pedido WHERE pedido.finalizado = FALSE;")
+        dados = cur.fetchall()
+        for pedido_data in dados:
+            id_lanches = pedido_data[2].split(',')
+            lanches = []
+
+            for id_lanche in id_lanches:
+                lanche = Produto.get_produto(int(id_lanche))
+                if lanche:
+                    found = False
+                    for produto in lanches:
+                        if produto['nome'] == lanche['nome']:
+                            produto['quantidade'] += 1
+                            found = True
+                            break
+                    if not found:
+                        lanches.append({'nome': lanche['nome'], 'quantidade': 1})
+
+            pedido = cls(id=pedido_data[0], id_cliente=pedido_data[1], ids_lanches=pedido_data[2], total=pedido_data[3], data=pedido_data[4], atendente=pedido_data[5], cupom=pedido_data[6], finalizado=pedido_data[7], lanches=lanches)
+            pedidos.append(pedido)
+
         return pedidos

@@ -41,6 +41,7 @@
     {% endif %}
     {% endwith %}
     <div class="container">
+        {% if usuario %}<h3>SEJA BEM-VINDO, {{usuario['nome']}}</h3>{% endif %}
         <div class="topo">
             <h1>🍔 Hamburgueres 🍔</h1>
         </div>

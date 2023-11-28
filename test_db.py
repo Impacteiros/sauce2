@@ -33,6 +33,8 @@ def test_zerar_db():
     cur.execute("SELECT setval('cupom_id_seq', 1, false);")
     cur.execute("DELETE FROM endereco;")
     cur.execute("SELECT setval('endereco_id_seq', 1, false);")
+    cur.execute("DELETE FROM pedido;")
+    cur.execute("SELECT setval('pedido_id_seq', 1, false);")
 
 def test_cadastro_produto():
     produto_1 = Produto.adicionar_produto("X-Burguer", "180g de CARNE BOVINA", "16.99", "hamburguer", "xburguer.jpg")

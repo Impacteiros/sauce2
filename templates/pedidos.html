@@ -12,15 +12,25 @@
 <body>
     {% include 'header.html' %}
     <center><h1>Meus Pedidos</h1></center>
+    <center><h3>Olá {{ usuario }}</h3></center>
     <div class="container">
         {% if pedidos %}
+
             <ul class="lista-pedidos">
                 {% for pedido in pedidos %}
+                
                     <li class="pedido">
-                        <p>ID do Pedido: {{ pedido.id }}</p>
-                        <p>Data do Pedido: {{ pedido.data }}</p>
-                        <p>Total: R$ {{ "%.2f" % pedido.total }}</p>
-                        <!-- Adicione outros detalhes do pedido conforme necessário -->
+                        <b>STATUS:</b> {% if pedido.finalizado %}FINALIZADO{% else %}EM ANDAMENTO{% endif %}
+                        <p><b>ID do Pedido:</b> {{ pedido.id }}</p>
+                        <p><b>Data do Pedido:</b> {{ pedido.data.strftime('%d/%m/%Y - %H:%M') }}</p>
+                        <p><b>Total:</b> R$ {{ "%.2f" % pedido.total }}</p><br>
+                        <p><b>Pedido:
+                            <ul>
+                                {% for lanche in pedido.lanches %}
+                                    <li>{{ lanche.nome }}: {{ lanche.quantidade }}</li>
+                                {% endfor %}
+                            </ul>
+                        </p>
                     </li>
                 {% endfor %}
             </ul>

@@ -67,7 +67,7 @@
         <ul>
         <form>
         {% for end in enderecos %}
-        <li><input type="radio" name="endereco">{{ end.endereco }} <a href="/endereco/remover/{{end.id}}" style="color: #FF0000;"><i class="fas fa-times"></i>(REMOVER)</a></li>
+        <li><input type="radio" name="endereco" checked>{{ end.endereco }} <a href="/endereco/remover/{{end.id}}" style="color: #FF0000;"><i class="fas fa-times"></i>(REMOVER)</a></li>
         {% endfor %}
         </form>
         </ul>

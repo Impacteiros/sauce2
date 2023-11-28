@@ -87,11 +87,31 @@ h3 {
   color:#288d00;
 }
 
-.infos, .pedido {
+.infos {
     display: flex;
     border-radius: 0.3em;
     border-style: solid;
     border-color: rgb(0, 0, 0);
+}
+
+.lista-pedidos {
+  text-align: center;
+  width: 70%;
+}
+
+.pedido {
+  padding: 5px;
+  border-radius: 0.3em;
+  border-style: solid;
+  border-color: rgb(0, 0, 0);
+}
+
+.pedido p {
+  margin: 0;
+}
+
+.pedido ul {
+  margin-top: 1em;
 }
 
 .topo {
